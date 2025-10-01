@@ -1,0 +1,129 @@
+local player = game.Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+local clickedESP = false
+local clickedNV = false
+local menuVisible = true
+local dragging, dragStart, startPos
+
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BlackLonerMenu"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Position = UDim2.new(0.14, 0, 0.186, 0)
+mainFrame.Size = UDim2.new(0.247, 0, 0.522, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BackgroundTransparency = 0.05
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+-- Top Bar
+local topBar = Instance.new("TextLabel")
+topBar.Size = UDim2.new(1, 0, 0, 40)
+topBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+topBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+topBar.TextScaled = true
+topBar.Text = "Black Loner"
+topBar.Parent = mainFrame
+
+-- Scroll Frame
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, -40)
+scrollFrame.Position = UDim2.new(0, 0, 0, 40)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.Parent = mainFrame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 5)
+layout.FillDirection = Enum.FillDirection.Vertical
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = scrollFrame
+
+layout.Changed:Connect(function()
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+end)
+
+-- Button creator
+local function createButton(name, callback)
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, -10, 0, 40)
+	button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	button.TextColor3 = Color3.fromRGB(0, 255, 0) -- green initially
+	button.TextScaled = true
+	button.Text = name
+	button.Parent = scrollFrame
+
+	button.MouseButton1Click:Connect(function()
+		callback(button)
+	end)
+end
+
+-- ESP Button
+createButton("ESP", function(button)
+	if clickedESP then return end
+	clickedESP = true
+
+	-- Run ESP script
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/ESP"))()
+
+	-- Change text color to yellow
+	button.Text = "ESP Enabled"
+	button.TextColor3 = Color3.fromRGB(255, 255, 0)
+	button.AutoButtonColor = false
+	button.Active = false
+end)
+
+-- NightVision Button
+createButton("NightVision", function(button)
+	if clickedNV then return end
+	clickedNV = true
+
+	-- Run NightVision script
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/NightVision"))()
+
+	-- Change text color to yellow
+	button.Text = "NightVision Enabled"
+	button.TextColor3 = Color3.fromRGB(255, 255, 0)
+	button.AutoButtonColor = false
+	button.Active = false
+end)
+
+-- Toggle menu with F5
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if input.KeyCode == Enum.KeyCode.F5 then
+		menuVisible = not menuVisible
+		mainFrame.Visible = menuVisible
+	end
+end)
+
+-- Dragging system
+topBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+	end
+end)
+
+topBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+		local delta = input.Position - dragStart
+		mainFrame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
