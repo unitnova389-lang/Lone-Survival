@@ -1,0 +1,87 @@
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+-- ⛔ DO NOT change global lighting settings
+-- ✅ Create a clone of the night lighting just for the local player
+
+-- Step 1: Night vision color correction
+local nightVision = Instance.new("ColorCorrectionEffect")
+nightVision.Name = "LocalNightVision"
+nightVision.Saturation = 0.3
+nightVision.TintColor = Color3.fromRGB(255, 255, 255)
+nightVision.Contrast = 0.3
+nightVision.Brightness = 0.1
+nightVision.Parent = Lighting
+
+-- Step 2: Add a dark sky ONLY for you
+local darkSky = Instance.new("Sky")
+darkSky.Name = "LocalNightSky"
+darkSky.MoonTextureId = "rbxassetid://6444320594"
+darkSky.SkyboxBk = "rbxassetid://6444884333"
+darkSky.SkyboxDn = "rbxassetid://6444886072"
+darkSky.SkyboxFt = "rbxassetid://6444885974"
+darkSky.SkyboxLf = "rbxassetid://6444885667"
+darkSky.SkyboxRt = "rbxassetid://6444885849"
+darkSky.SkyboxUp = "rbxassetid://6444886185"
+darkSky.StarCount = 3000
+darkSky.SunAngularSize = 0
+darkSky.MoonAngularSize = 11
+darkSky.Parent = Lighting
+
+-- Step 3: Override local lighting to simulate night
+Lighting.ClockTime = 0 -- Midnight
+Lighting.Brightness = 1.5 -- Brighter than normal night
+Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+Lighting.FogColor = Color3.fromRGB(0, 0, 0)
+Lighting.FogEnd = 500
+
+Lighting.Changed:Connect(function()
+    Lighting.ClockTime = 0
+    Lighting.Brightness = 1.5
+    Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+    Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+end)
+
+---------------------------------------------------------------------
+-- ✅ Prevent FOV changes when camera goes underwater
+---------------------------------------------------------------------
+local Camera = Workspace.CurrentCamera
+local DEFAULT_FOV = 70 -- change to whatever FOV you normally use
+
+RunService.RenderStepped:Connect(function()
+    if not Camera then return end
+    local camPos = Camera.CFrame.Position
+    local material = Workspace.Terrain:ReadVoxels(
+        Region3.new(camPos - Vector3.new(2,2,2), camPos + Vector3.new(2,2,2)),
+        4
+    )
+    -- quick check using the camera's actual point
+    local waterAtCamera = Workspace.Terrain:ReadVoxels(
+        Region3.new(camPos, camPos),
+        4
+    )
+
+    -- If the terrain at the camera is water, force default FOV
+    if Workspace.Terrain:ReadVoxels(Region3.new(camPos, camPos), 4)[1][1][1] == Enum.Material.Water then
+        Camera.FieldOfView = DEFAULT_FOV
+    end
+end)
+
+---------------------------------------------------------------------
+-- 🟦 Remove Roblox’s built-in underwater fog (local only)
+---------------------------------------------------------------------
+local Terrain = workspace.Terrain
+
+-- Make water visually clear
+Terrain.WaterTransparency = 1        -- fully transparent water
+Terrain.WaterReflectance = 0         -- no surface reflection if desired
+Terrain.WaterWaveSize = 0            -- no waves
+Terrain.WaterWaveSpeed = 0           -- stop ripples
+
+-- The key lines for fog:
+Terrain.WaterFogColor = Color3.fromRGB(0, 0, 0)  -- doesn’t matter if density is 0
+Terrain.WaterFogEnd = 1                         -- huge distance so no blue haze
