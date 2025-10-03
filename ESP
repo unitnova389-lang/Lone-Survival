@@ -1,376 +1,96 @@
--- Advanced ESP Full Script (Viewmodel-safe + robust player detection)
-if not Drawing then
-    warn("ESP: Drawing API not supported in this executor")
-    return
-end
-
+-- Admin LocalScript: Rainbow Outline Highlight + Health & Username
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local camera = workspace.CurrentCamera
+local Workspace = game:GetService("Workspace")
+
 local localPlayer = Players.LocalPlayer
+local playersFolder = Workspace:WaitForChild("Players")
 
-local playersFolder = workspace:WaitForChild("Players")
-local rootPart
-
--- Toggle to true to get runtime debug prints in your executor console
-local Debug = false
-
--- Update local player root part
-local function updateLocalRoot()
-    local char = localPlayer.Character
-    if char then
-        rootPart = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-    else
-        rootPart = nil
-    end
-    if Debug then print("DEBUG: updated rootPart:", rootPart) end
-end
-updateLocalRoot()
-localPlayer.CharacterAdded:Connect(updateLocalRoot)
-localPlayer.CharacterRemoving:Connect(function() rootPart = nil end)
-
--- Config
-local MaxDistance = 3000
-local ESPColor = Color3.fromRGB(0,255,255)
-local BoxEnabled = true
-local SkeletonEnabled = true
-local HealthEnabled = true
-local ToolEnabled = true
-
--- Skeleton map
-local skeletonMap = {
-    {"Head","UpperTorso"},{"Head","Torso"},{"UpperTorso","LowerTorso"},{"Torso","HumanoidRootPart"},
-    {"UpperTorso","LeftUpperArm"},{"UpperTorso","RightUpperArm"},{"LeftUpperArm","LeftLowerArm"},{"RightUpperArm","RightLowerArm"},
-    {"LeftLowerArm","LeftHand"},{"RightLowerArm","RightHand"},{"LowerTorso","LeftUpperLeg"},{"LowerTorso","RightUpperLeg"},
-    {"LeftUpperLeg","LeftLowerLeg"},{"RightUpperLeg","RightLowerLeg"},{"LeftLowerLeg","LeftFoot"},{"RightLowerLeg","RightFoot"},
-}
-
-local drawings = {}
-
--- Remove all drawings
-local function removeDrawings(model)
-    local data = drawings[model]
-    if not data then return end
-    for _, obj in pairs(data) do
-        pcall(function() obj:Remove() end)
-    end
-    drawings[model] = nil
-    if Debug then print("DEBUG: removed drawings for", model and model.Name) end
+-- Rainbow color function
+local function getRainbowColor()
+    return Color3.fromHSV(tick()%5/5,1,1)
 end
 
--- Death marker function
-local function spawnDeathMarker(pos)
-    local part = Instance.new("Part")
-    part.Size = Vector3.new(1,1,1)
-    part.Anchored = true
-    part.CanCollide = false
-    part.Transparency = 1
-    part.Position = pos
-    part.Parent = workspace
+-- Create highlight and GUI for a model
+local function applyHighlight(model)
+    if not model or not model:IsA("Model") then return end
+    if model:FindFirstChild("Admin_Highlight") then return end
 
+    -- Highlight
+    local hl = Instance.new("Highlight")
+    hl.Name = "Admin_Highlight"
+    hl.FillColor = Color3.fromRGB(0,0,0)
+    hl.FillTransparency = 0.4
+    hl.OutlineColor = Color3.fromRGB(255,0,0) -- temporary
+    hl.OutlineTransparency = 0
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Parent = model
+
+    -- Get humanoid and root
+    local humanoid = model:FindFirstChildWhichIsA("Humanoid")
+    local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso")
+    if not humanoid or not root then return end
+
+    -- Billboard GUI for Health (above) and Username (below)
     local gui = Instance.new("BillboardGui")
-    gui.Adornee = part
+    gui.Name = "Admin_InfoGui"
+    gui.Adornee = root
+    gui.Size = UDim2.new(0,150,0,50)
+    gui.StudsOffset = Vector3.new(0,3,0)
     gui.AlwaysOnTop = true
-    gui.Size = UDim2.new(4,0,4,0)
-    gui.StudsOffset = Vector3.new(0,2,0)
-    gui.Parent = workspace
+    gui.Parent = model
 
-    local img = Instance.new("ImageLabel")
-    img.Size = UDim2.new(1,0,1,0)
-    img.BackgroundTransparency = 1
-    img.Image = "rbxassetid://9583486354"
-    img.Parent = gui
+    -- Health text (above)
+    local healthText = Instance.new("TextLabel")
+    healthText.Size = UDim2.new(1,0,0.5,0)
+    healthText.Position = UDim2.new(0,0,0,0)
+    healthText.BackgroundTransparency = 1
+    healthText.TextColor3 = Color3.fromRGB(0,255,0)
+    healthText.TextStrokeTransparency = 0
+    healthText.TextScaled = true
+    healthText.Text = string.format("HP: %.0f/%.0f", humanoid.Health, humanoid.MaxHealth)
+    healthText.Parent = gui
 
-    task.delay(2, function()
-        if gui and gui.Parent then gui:Destroy() end
-        if part and part.Parent then part:Destroy() end
+    -- Username text (below)
+    local nameText = Instance.new("TextLabel")
+    nameText.Size = UDim2.new(1,0,0.5,0)
+    nameText.Position = UDim2.new(0,0,0.5,0)
+    nameText.BackgroundTransparency = 1
+    nameText.TextColor3 = Color3.fromRGB(255,255,255)
+    nameText.TextStrokeTransparency = 0
+    nameText.TextScaled = true
+    nameText.Text = model.Name
+    nameText.Parent = gui
+
+    -- Update every frame
+    RunService.RenderStepped:Connect(function()
+        if humanoid and humanoid.Health > 0 then
+            healthText.Text = string.format("HP: %.0f/%.0f", humanoid.Health, humanoid.MaxHealth)
+            hl.OutlineColor = getRainbowColor()
+        end
+    end)
+
+    -- Cleanup on death
+    humanoid.Died:Connect(function()
+        if gui then gui:Destroy() end
+        if hl then hl:Destroy() end
     end)
 end
 
--- Helpers
-local function isViewmodel(model)
-    if not model or not model.Name then return false end
-    local name = tostring(model.Name):lower()
-    -- catch "Viewmodel", "viewmodel", "ViewModel", or names that include the word
-    if name == "viewmodel" or name:find("viewmodel", 1, true) then
-        return true
-    end
-    return false
-end
-
-local function getPlayerFromModel(model)
-    if not model then return nil end
-    local plr = Players:GetPlayerFromCharacter(model)
-    if not plr and model.Name then
-        plr = Players:FindFirstChild(model.Name)
-    end
-    return plr
-end
-
--- Create ESP drawings for a player model
-local function createDrawings(model)
-    if drawings[model] then return end
-    if not model then return end
-
-    -- extra safety: never create for Viewmodel
-    if isViewmodel(model) then
-        if Debug then print("DEBUG: skipping createDrawings for Viewmodel:", model.Name) end
-        return
-    end
-
-    local data = { lines = {}, box = nil, name = nil, distance = nil, tool = nil, healthBar = nil, healthOutline = nil }
-
-    -- Skeleton lines
-    for i = 1,#skeletonMap do
-        local line = Drawing.new("Line")
-        line.Thickness = 2
-        line.Color = ESPColor
-        line.Visible = false
-        table.insert(data.lines, line)
-    end
-
-    -- Box
-    local box = Drawing.new("Square")
-    box.Thickness = 2
-    box.Filled = false
-    box.Color = ESPColor
-    box.Visible = false
-    data.box = box
-
-    -- Name text
-    local name = Drawing.new("Text")
-    name.Size = 14
-    name.Center = true
-    name.Outline = true
-    name.Color = Color3.fromRGB(255,255,255)
-    name.Visible = false
-    data.name = name
-
-    -- Distance text
-    local distance = Drawing.new("Text")
-    distance.Size = 14
-    distance.Center = true
-    distance.Outline = true
-    distance.Color = Color3.fromRGB(255,255,255)
-    distance.Visible = false
-    data.distance = distance
-
-    -- Tool text
-    local tool = Drawing.new("Text")
-    tool.Size = 14
-    tool.Center = true
-    tool.Outline = true
-    tool.Color = Color3.fromRGB(0,255,0)
-    tool.Visible = false
-    data.tool = tool
-
-    -- Health bar outline
-    local healthOutline = Drawing.new("Square")
-    healthOutline.Thickness = 2
-    healthOutline.Filled = true
-    healthOutline.Color = Color3.fromRGB(0,0,0)
-    healthOutline.Visible = false
-    data.healthOutline = healthOutline
-
-    -- Health bar
-    local healthBar = Drawing.new("Square")
-    healthBar.Thickness = 2
-    healthBar.Filled = true
-    healthBar.Color = Color3.fromRGB(0,255,0)
-    healthBar.Visible = false
-    data.healthBar = healthBar
-
-    drawings[model] = data
-
-    local humanoid = model:FindFirstChildWhichIsA("Humanoid")
-    if humanoid then
-        humanoid.Died:Connect(function()
-            local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso")
-            if root then
-                spawnDeathMarker(root.Position)
-            end
-            removeDrawings(model)
+-- Apply to all existing models
+for _, model in pairs(playersFolder:GetChildren()) do
+    if model ~= localPlayer.Character then
+        task.spawn(function()
+            task.wait(0.1)
+            applyHighlight(model)
         end)
     end
-
-    model.AncestryChanged:Connect(function(_, parent)
-        if not parent then removeDrawings(model) end
-    end)
-
-    if Debug then
-        local plr = getPlayerFromModel(model)
-        print("DEBUG: created drawings for", model.Name, "player:", plr and plr.Name or "nil")
-    end
 end
 
--- Check if a model is a valid player character
-local function isValidModel(model)
-    if not model or not model:IsA("Model") then return false end
-
-    -- ignore viewmodels
-    if isViewmodel(model) then return false end
-
-    -- ensure the model is inside the players folder
-    if not model:IsDescendantOf(playersFolder) then
-        return false
-    end
-
-    local plr = getPlayerFromModel(model)
-    if not plr then return false end
-    if plr == localPlayer then return false end
-
-    -- require a root part
-    if not (model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso")) then
-        return false
-    end
-
-    return true
-end
-
--- Initialize models
-local function initModels()
-    for _, model in ipairs(playersFolder:GetChildren()) do
-        if isValidModel(model) and not drawings[model] then
-            createDrawings(model)
-        end
-    end
-end
-
-RunService.RenderStepped:Connect(function()
-    -- refresh camera ref if needed
-    if not camera or not camera.Parent then camera = workspace.CurrentCamera end
-
-    if not rootPart then updateLocalRoot() end
-    if not rootPart then return end
-
-    initModels()
-
-    for model, data in pairs(drawings) do
-        -- if model became invalid (or became a Viewmodel), remove drawings
-        if not isValidModel(model) then
-            removeDrawings(model)
-        else
-            local humanoid = model:FindFirstChildWhichIsA("Humanoid")
-            local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso")
-            if humanoid and root then
-                local dist = (root.Position - rootPart.Position).Magnitude
-                if dist <= MaxDistance then
-                    -- Parts for skeleton
-                    local parts = {}
-                    for _, pname in ipairs({"Head","UpperTorso","LowerTorso","HumanoidRootPart","LeftUpperArm","RightUpperArm",
-                        "LeftLowerArm","RightLowerArm","LeftHand","RightHand","LeftUpperLeg","RightUpperLeg","LeftLowerLeg","RightLowerLeg",
-                        "LeftFoot","RightFoot"}) do
-                        local p = model:FindFirstChild(pname)
-                        if p then table.insert(parts,p) end
-                    end
-
-                    local minX,minY = math.huge,math.huge
-                    local maxX,maxY = -math.huge,-math.huge
-                    local anyOnScreen = false
-                    for _, p in ipairs(parts) do
-                        local pos, onScreen = camera:WorldToViewportPoint(p.Position)
-                        if onScreen then
-                            anyOnScreen = true
-                            minX = math.min(minX,pos.X)
-                            minY = math.min(minY,pos.Y)
-                            maxX = math.max(maxX,pos.X)
-                            maxY = math.max(maxY,pos.Y)
-                        end
-                    end
-
-                    -- Box
-                    if BoxEnabled and anyOnScreen and minX < maxX and minY < maxY then
-                        data.box.Position = Vector2.new(minX,minY)
-                        data.box.Size = Vector2.new(maxX-minX,maxY-minY)
-                        data.box.Color = ESPColor
-                        data.box.Visible = true
-                    else
-                        data.box.Visible = false
-                    end
-
-                    -- Skeleton
-                    if SkeletonEnabled then
-                        for i, conn in ipairs(skeletonMap) do
-                            local p1 = model:FindFirstChild(conn[1])
-                            local p2 = model:FindFirstChild(conn[2])
-                            local line = data.lines[i]
-                            if p1 and p2 then
-                                local pos1,on1 = camera:WorldToViewportPoint(p1.Position)
-                                local pos2,on2 = camera:WorldToViewportPoint(p2.Position)
-                                if (on1 or on2) then
-                                    line.From = Vector2.new(pos1.X,pos1.Y)
-                                    line.To = Vector2.new(pos2.X,pos2.Y)
-                                    line.Color = ESPColor
-                                    line.Visible = true
-                                else line.Visible = false end
-                            else line.Visible = false end
-                        end
-                    else
-                        for _, l in ipairs(data.lines) do l.Visible = false end
-                    end
-
-                    -- Name + Distance
-                    if data.box.Visible then
-                        local centerX = data.box.Position.X + data.box.Size.X/2
-                        local bottomY = data.box.Position.Y + data.box.Size.Y
-
-                        local player = getPlayerFromModel(model)
-                        data.name.Position = Vector2.new(centerX,bottomY+6)
-                        data.name.Text = (player and player.Name) or model.Name
-                        data.name.Visible = true
-
-                        data.distance.Position = Vector2.new(centerX,bottomY+20)
-                        data.distance.Text = string.format("[%.0f] studs",dist)
-                        data.distance.Visible = true
-
-                        -- Tool
-                        if ToolEnabled then
-                            local toolName = nil
-                            local equipped = model:FindFirstChildWhichIsA("Tool")
-                            if equipped then
-                                toolName = equipped.Name
-                            elseif player and player:FindFirstChild("Backpack") then
-                                local lastTool = player.Backpack:FindFirstChildWhichIsA("Tool")
-                                if lastTool then toolName = lastTool.Name end
-                            end
-                            if toolName then
-                                data.tool.Position = Vector2.new(centerX,bottomY+34)
-                                data.tool.Text = "[Tool: "..toolName.."]"
-                                data.tool.Visible = true
-                            else data.tool.Visible = false end
-                        end
-
-                        -- Healthbar
-                        if HealthEnabled then
-                            local boxX, boxY, boxH = data.box.Position.X, data.box.Position.Y, data.box.Size.Y
-                            local hpPercent = math.clamp(humanoid.Health/humanoid.MaxHealth,0,1)
-                            data.healthOutline.Position = Vector2.new(boxX-6,boxY)
-                            data.healthOutline.Size = Vector2.new(4,boxH)
-                            data.healthOutline.Visible = true
-
-                            data.healthBar.Position = Vector2.new(boxX-6,boxY + (1-hpPercent)*boxH)
-                            data.healthBar.Size = Vector2.new(4,boxH*hpPercent)
-                            data.healthBar.Color = Color3.fromRGB(255*(1-hpPercent),255*hpPercent,0)
-                            data.healthBar.Visible = true
-                        end
-                    else
-                        data.name.Visible = false
-                        data.distance.Visible = false
-                        data.tool.Visible = false
-                        data.healthBar.Visible = false
-                        data.healthOutline.Visible = false
-                    end
-                else
-                    -- target out of range: hide visuals
-                    data.box.Visible = false
-                    for _, l in ipairs(data.lines) do l.Visible = false end
-                    data.name.Visible = false
-                    data.distance.Visible = false
-                    data.tool.Visible = false
-                    data.healthBar.Visible = false
-                    data.healthOutline.Visible = false
-                end
-            end
-        end
+-- Apply to new models
+playersFolder.ChildAdded:Connect(function(model)
+    if model ~= localPlayer.Character then
+        task.wait(0.1)
+        applyHighlight(model)
     end
 end)
