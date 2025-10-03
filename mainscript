@@ -127,3 +127,23 @@ UserInputService.InputEnded:Connect(function(input)
 		dragging = false
 	end
 end)
+
+-- Inside your LocalScript (StarterPlayerScripts or wherever your main local script is)
+
+-- Make a ScreenGui if not already
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local CrosshairGui = Instance.new("ScreenGui")
+CrosshairGui.Name = "CrosshairGui"
+CrosshairGui.ResetOnSpawn = false
+CrosshairGui.Parent = PlayerGui
+
+-- Create ImageLabel for crosshair
+local Crosshair = Instance.new("ImageLabel")
+Crosshair.Name = "Crosshair"
+Crosshair.Parent = CrosshairGui
+Crosshair.BackgroundTransparency = 1
+Crosshair.Size = UDim2.new(0, 50, 0, 50) -- change size if needed
+Crosshair.Position = UDim2.new(0.5, -25, 0.5, -25) -- centers it
+Crosshair.Image = "rbxassetid://91597309862380"
