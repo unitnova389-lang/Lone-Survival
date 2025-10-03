@@ -1,0 +1,27 @@
+-- LocalScript
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local UIS = game:GetService("UserInputService")
+
+-- Define FOV stages
+local fovStages = {100, 70, 50, 30, 15, 5} 
+-- 100 = super wide, 70 = normal, 50 = aiming, 30 = sniper, 15 = max, 5 = ultra
+
+local currentStage = 1
+
+-- Function to cycle zoom
+local function cycleZoom()
+    currentStage = currentStage + 1
+    if currentStage > #fovStages then
+        currentStage = 1 -- reset to wide
+    end
+    camera.FieldOfView = fovStages[currentStage]
+end
+
+-- Detect middle mouse click
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton3 then
+        cycleZoom()
+    end
+end)
