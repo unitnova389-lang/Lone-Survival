@@ -1,0 +1,62 @@
+-- LocalScript (StarterPlayerScripts)
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Remove old GUI if it exists
+local old = playerGui:FindFirstChild("CrosshairGui")
+if old then old:Destroy() end
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CrosshairGui"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Create ImageLabel for crosshair
+local cross = Instance.new("ImageLabel")
+cross.Name = "Crosshair"
+cross.Parent = screenGui
+cross.BackgroundTransparency = 1
+cross.AnchorPoint = Vector2.new(0.5,0.5)
+cross.Position = UDim2.new(0.5,0,0.5,0)
+cross.Image = "rbxassetid://134865194412398"
+cross.Size = UDim2.new(0,48,0,48)
+cross.ScaleType = Enum.ScaleType.Fit
+cross.ZIndex = 1000
+
+local aspect = Instance.new("UIAspectRatioConstraint", cross)
+aspect.AspectRatio = 1
+
+-- Scale with screen height
+local function adjustSize()
+    local h = camera.ViewportSize.Y
+    local px = math.clamp(math.floor(h * 0.04), 16, 128)
+    cross.Size = UDim2.new(0, px, 0, px)
+end
+adjustSize()
+camera:GetPropertyChangedSignal("ViewportSize"):Connect(adjustSize)
+
+-- Rainbow RGB effect
+local RunService = game:GetService("RunService")
+local t = 0
+RunService.RenderStepped:Connect(function(dt)
+    t = t + dt
+    local r = 0.5 + 0.5 * math.sin(t * 2)
+    local g = 0.5 + 0.5 * math.sin(t * 2 + math.pi*2/3)
+    local b = 0.5 + 0.5 * math.sin(t * 2 + math.pi*4/3)
+    cross.ImageColor3 = Color3.new(r, g, b)
+end)
+
+-- Optional toggle with C key
+local ContextActionService = game:GetService("ContextActionService")
+local visible = true
+local function toggle(actionName, inputState)
+    if inputState == Enum.UserInputState.Begin then
+        visible = not visible
+        cross.Visible = visible
+    end
+    return Enum.ContextActionResult.Sink
+end
+ContextActionService:BindAction("ToggleCrosshair", toggle, false, Enum.KeyCode.C)
