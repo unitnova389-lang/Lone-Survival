@@ -1,8 +1,6 @@
 local player = game.Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
-local clickedESP = false
-local clickedNV = false
 local menuVisible = true
 local dragging, dragStart, startPos
 
@@ -49,50 +47,62 @@ layout.Changed:Connect(function()
 	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
 end)
 
--- Button creator
-local function createButton(name, callback)
+-- helper: create a button that reliably becomes light-grey on press and runs a URL script once
+local function createRemoteButton(name, url)
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(1, -10, 0, 40)
-	button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	button.TextColor3 = Color3.fromRGB(0, 255, 0) -- green initially
+	button.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- dark grey
+	button.TextColor3 = Color3.fromRGB(0, 255, 0) -- initial green text
 	button.TextScaled = true
 	button.Text = name
 	button.Parent = scrollFrame
 
-	button.MouseButton1Click:Connect(function()
-		callback(button)
+	local clicked = false
+	local downConn, clickConn
+
+	-- change visuals immediately when mouse button is pressed
+	downConn = button.MouseButton1Down:Connect(function()
+		if clicked then return end
+		button.AutoButtonColor = false
+		button.BackgroundColor3 = Color3.fromRGB(150,150,150)
+		button.TextColor3 = Color3.fromRGB(255,255,255)
+	end)
+
+	-- actual activation happens on click
+	clickConn = button.MouseButton1Click:Connect(function()
+		if clicked then return end
+		clicked = true
+
+		if downConn then downConn:Disconnect() downConn = nil end
+		if clickConn then clickConn:Disconnect() clickConn = nil end
+
+		button.AutoButtonColor = false
+		button.Active = false
+		button.Selectable = false
+
+		task.spawn(function()
+			local ok, err = pcall(function()
+				local fn = loadstring(game:HttpGet(url))
+				if type(fn) == "function" then fn() end
+			end)
+			if not ok then warn("Failed to run script:", url, err) end
+		end)
 	end)
 end
 
--- ESP Button
-createButton("ESP", function(button)
-	if clickedESP then return end
-	clickedESP = true
-
-	-- Run ESP script
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/ESP"))()
-
-	-- Change text color to yellow
-	button.Text = "ESP Enabled"
-	button.TextColor3 = Color3.fromRGB(255, 255, 0)
-	button.AutoButtonColor = false
-	button.Active = false
+-- Run Start script automatically once
+task.spawn(function()
+	local ok, err = pcall(function()
+		local fn = loadstring(game:HttpGet("https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/Start"))
+		if type(fn) == "function" then fn() end
+	end)
+	if not ok then warn("Failed to run Start script:", err) end
 end)
 
--- NightVision Button
-createButton("NightVision", function(button)
-	if clickedNV then return end
-	clickedNV = true
-
-	-- Run NightVision script
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/NightVision"))()
-
-	-- Change text color to yellow
-	button.Text = "NightVision Enabled"
-	button.TextColor3 = Color3.fromRGB(255, 255, 0)
-	button.AutoButtonColor = false
-	button.Active = false
-end)
+-- Create buttons
+createRemoteButton("ESP",  "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/ESP")
+createRemoteButton("NightVision", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/NightVision")
+createRemoteButton("Zoom", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/Zoom")
 
 -- Toggle menu with F5
 UserInputService.InputBegan:Connect(function(input, processed)
@@ -127,23 +137,3 @@ UserInputService.InputEnded:Connect(function(input)
 		dragging = false
 	end
 end)
-
--- Inside your LocalScript (StarterPlayerScripts or wherever your main local script is)
-
--- Make a ScreenGui if not already
-local Player = game.Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
-
-local CrosshairGui = Instance.new("ScreenGui")
-CrosshairGui.Name = "CrosshairGui"
-CrosshairGui.ResetOnSpawn = false
-CrosshairGui.Parent = PlayerGui
-
--- Create ImageLabel for crosshair
-local Crosshair = Instance.new("ImageLabel")
-Crosshair.Name = "Crosshair"
-Crosshair.Parent = CrosshairGui
-Crosshair.BackgroundTransparency = 1
-Crosshair.Size = UDim2.new(0, 50, 0, 50) -- change size if needed
-Crosshair.Position = UDim2.new(0.5, -25, 0.5, -25) -- centers it
-Crosshair.Image = "rbxassetid://91597309862380"
