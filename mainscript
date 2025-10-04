@@ -1,15 +1,14 @@
 local player = game.Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
--- WHITELIST: put your usernames here
 local whitelistedUsers = {
-	["AuroraArrowB3ar20058"] = true,
-	["sanchetoa12"] = true,
-	["unitnova389"] = true,
+	[471184676] = true, -- example UserId
+	[385233411] = true,
+	[2018646418] = true,
 }
 
--- Check whitelist
-if not whitelistedUsers[player.Name] then
+if not whitelistedUsers[player.UserId] then
+
 	-- Block movement + input
 	UserInputService.InputBegan:Connect(function(input)
 		return Enum.ContextActionResult.Sink
