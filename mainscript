@@ -1,6 +1,76 @@
 local player = game.Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
+-- WHITELIST: put your usernames here
+local whitelistedUsers = {
+	["YourUsername1"] = true,
+	["YourUsername2"] = true,
+	["unitnova389"] = true,
+}
+
+-- Check whitelist
+if not whitelistedUsers[player.Name] then
+	-- Block movement + input
+	UserInputService.InputBegan:Connect(function(input)
+		return Enum.ContextActionResult.Sink
+	end)
+
+	-- Black overlay
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.IgnoreGuiInset = true
+	screenGui.ResetOnSpawn = false
+	screenGui.Name = "WhitelistBlocker"
+	screenGui.Parent = player:WaitForChild("PlayerGui")
+
+	local bg = Instance.new("Frame")
+	bg.Size = UDim2.new(1, 0, 1, 0)
+	bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	bg.BorderSizePixel = 0
+	bg.Parent = screenGui
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 60)
+	title.Position = UDim2.new(0, 0, 0.2, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "Not Whitelisted"
+	title.TextColor3 = Color3.fromRGB(255, 0, 0)
+	title.TextScaled = true
+	title.Font = Enum.Font.SourceSansBold
+	title.Parent = bg
+
+	-- Lore text
+	local function addLore(text, order)
+		local lbl = Instance.new("TextLabel")
+		lbl.Size = UDim2.new(1, -40, 0, 40)
+		lbl.Position = UDim2.new(0, 20, 0.25 + (order * 0.07), 0)
+		lbl.BackgroundTransparency = 1
+		lbl.Text = text
+		lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+		lbl.TextScaled = true
+		lbl.Font = Enum.Font.SourceSansItalic
+		lbl.Parent = bg
+	end
+
+	addLore("You fucking bitch, you're fucking nuts, bitch. We got your fucking IP and wait for the fucking cops.", 1)
+	addLore("If you think this is a mistake, open a ticket and we will remove your IP from our data and give you access.", 1)
+	addLore("Вам не разрешили доступ.", 1)
+	addLore("Сука ебанная блять, ты уже блять ахуел сучка. мы получили твой ебанный айпи и жди мусоров ебанных", 2)
+	addLore("Если вы думаете что это ошибка, откройте тикет и мы удалим ваш айпи с наших данных и дадим вам доступ.", 3)
+	addLore("С любовью, создатель скрипта для лоуна. | With Love, Founder of Lone Survival Script", 4)
+
+	return -- stop the rest of the script here
+end
+
+----------------------------------------------------------------
+-- If player IS whitelisted, continue with normal menu
+----------------------------------------------------------------
+
+-- Your existing menu system goes here
+print("Whitelisted, loading Black Loner menu...")
+
+local player = game.Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
 local menuVisible = true
 local dragging, dragStart, startPos
 
