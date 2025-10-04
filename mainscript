@@ -52,11 +52,11 @@ if not whitelistedUsers[player.Name] then
 	end
 
 	addLore("You fucking bitch, you're fucking nuts, bitch. We got your fucking IP and wait for the fucking cops.", 1)
-	addLore("If you think this is a mistake, open a ticket and we will remove your IP from our data and give you access.", 1)
-	addLore("Вам не разрешили доступ.", 1)
-	addLore("Сука ебанная блять, ты уже блять ахуел сучка. мы получили твой ебанный айпи и жди мусоров ебанных", 2)
-	addLore("Если вы думаете что это ошибка, откройте тикет и мы удалим ваш айпи с наших данных и дадим вам доступ.", 3)
-	addLore("С любовью, создатель скрипта для лоуна. | With Love, Founder of Lone Survival Script", 4)
+	addLore("If you think this is a mistake, open a ticket and we will remove your IP from our data and give you access.", 2)
+	addLore("Вам не разрешили доступ.", 3)
+	addLore("Сука ебанная блять, ты уже блять ахуел сучка. мы получили твой ебанный айпи и жди мусоров ебанных", 4)
+	addLore("Если вы думаете что это ошибка, откройте тикет и мы удалим ваш айпи с наших данных и дадим вам доступ.", 5)
+	addLore("С любовью, создатель скрипта для лоуна. | With Love, Founder of Lone Survival Script", 6)
 
 	return -- stop the rest of the script here
 end
