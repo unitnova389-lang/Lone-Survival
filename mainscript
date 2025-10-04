@@ -32,7 +32,7 @@ if not whitelistedUsers[player.Name] then
 	title.Size = UDim2.new(1, 0, 0, 60)
 	title.Position = UDim2.new(0, 0, 0.2, 0)
 	title.BackgroundTransparency = 1
-	title.Text = "Not Whitelisted"
+	title.Text = "Not Whitelisted | Вход Запрещён"
 	title.TextColor3 = Color3.fromRGB(255, 0, 0)
 	title.TextScaled = true
 	title.Font = Enum.Font.SourceSansBold
