@@ -15,7 +15,7 @@ if not whitelistedUsers[player.Name] then
 		return Enum.ContextActionResult.Sink
 	end)
 
-	-- Black overlay
+	-- Black overlay GUI
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.IgnoreGuiInset = true
 	screenGui.ResetOnSpawn = false
@@ -28,9 +28,10 @@ if not whitelistedUsers[player.Name] then
 	bg.BorderSizePixel = 0
 	bg.Parent = screenGui
 
+	-- Title
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1, 0, 0, 60)
-	title.Position = UDim2.new(0, 0, 0.2, 0)
+	title.Position = UDim2.new(0, 0, 0.15, 0)
 	title.BackgroundTransparency = 1
 	title.Text = "Not Whitelisted | Вход Запрещён"
 	title.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -38,35 +39,48 @@ if not whitelistedUsers[player.Name] then
 	title.Font = Enum.Font.SourceSansBold
 	title.Parent = bg
 
-	-- Lore text
-	local function addLore(text, order)
+	-- Lore container
+	local loreFrame = Instance.new("Frame")
+	loreFrame.Size = UDim2.new(1, -40, 0.6, 0)
+	loreFrame.Position = UDim2.new(0, 20, 0.25, 0)
+	loreFrame.BackgroundTransparency = 1
+	loreFrame.Parent = bg
+
+	local layout = Instance.new("UIListLayout")
+	layout.Parent = loreFrame
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 10)
+
+	-- Function to add lore lines
+	local function addLore(text)
 		local lbl = Instance.new("TextLabel")
-		lbl.Size = UDim2.new(1, -40, 0, 40)
-		lbl.Position = UDim2.new(0, 20, 0.25 + (order * 0.07), 0)
+		lbl.Size = UDim2.new(1, 0, 0, 40)
 		lbl.BackgroundTransparency = 1
+		lbl.TextWrapped = true
 		lbl.Text = text
 		lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
 		lbl.TextScaled = true
 		lbl.Font = Enum.Font.SourceSansItalic
-		lbl.Parent = bg
+		lbl.Parent = loreFrame
 	end
 
-	addLore("You fucking bitch, you're fucking nuts, bitch. We got your fucking IP and wait for the fucking cops.", 1)
-	addLore("If you think this is a mistake, open a ticket and we will remove your IP from our data and give you access.", 2)
-	addLore("Вам не разрешили доступ.", 3)
-	addLore("Сука ебанная блять, ты уже блять ахуел сучка. мы получили твой ебанный айпи и жди мусоров ебанных", 4)
-	addLore("Если вы думаете что это ошибка, откройте тикет и мы удалим ваш айпи с наших данных и дадим вам доступ.", 5)
-	addLore("С любовью, создатель скрипта для лоуна. | With Love, Founder of Lone Survival Script", 6)
+	-- Custom lore lines
+	addLore("You fucking bitch, you're fucking nuts, bitch. We got your fucking IP and wait for the fucking cops.")
+	addLore("If you think this is a mistake, open a ticket and we will remove your IP from our data and give you access.")
+	addLore("Вам не разрешили доступ.")
+	addLore("Сука ебанная блять, ты уже блять ахуел сучка. мы получили твой ебанный айпи и жди мусоров ебанных")
+	addLore("Если вы думаете что это ошибка, откройте тикет и дадим вам доступ.")
+	addLore("С любовью, создатель лоуна. | With Love, Founder of Lone Survival")
 
-	return -- stop the rest of the script here
+	return -- stop here if not whitelisted
 end
 
 ----------------------------------------------------------------
 -- If player IS whitelisted, continue with normal menu
 ----------------------------------------------------------------
 
--- Your existing menu system goes here
-print("Whitelisted, loading Black Loner menu...")
+print("✅ Whitelisted, loading Black Loner menu...")
+-- Your menu script goes here (ESP/NightVision/Zoom buttons etc.)
 
 local player = game.Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
