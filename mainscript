@@ -47,12 +47,12 @@ layout.Changed:Connect(function()
 	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
 end)
 
--- helper: create a button that reliably becomes light-grey on press and runs a URL script once
+-- Helper function to create a button
 local function createRemoteButton(name, url)
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(1, -10, 0, 40)
-	button.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- dark grey
-	button.TextColor3 = Color3.fromRGB(0, 255, 0) -- initial green text
+	button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	button.TextColor3 = Color3.fromRGB(0, 255, 0)
 	button.TextScaled = true
 	button.Text = name
 	button.Parent = scrollFrame
@@ -60,7 +60,6 @@ local function createRemoteButton(name, url)
 	local clicked = false
 	local downConn, clickConn
 
-	-- change visuals immediately when mouse button is pressed
 	downConn = button.MouseButton1Down:Connect(function()
 		if clicked then return end
 		button.AutoButtonColor = false
@@ -68,7 +67,6 @@ local function createRemoteButton(name, url)
 		button.TextColor3 = Color3.fromRGB(255,255,255)
 	end)
 
-	-- actual activation happens on click
 	clickConn = button.MouseButton1Click:Connect(function()
 		if clicked then return end
 		clicked = true
@@ -90,7 +88,7 @@ local function createRemoteButton(name, url)
 	end)
 end
 
--- Run Start script automatically once
+-- Run Start script automatically
 task.spawn(function()
 	local ok, err = pcall(function()
 		local fn = loadstring(game:HttpGet("https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/Start"))
@@ -100,7 +98,7 @@ task.spawn(function()
 end)
 
 -- Create buttons
-createRemoteButton("ESP",  "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/ESP")
+createRemoteButton("ESP", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/ESP")
 createRemoteButton("NightVision", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/NightVision")
 createRemoteButton("Zoom", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/Zoom")
 
