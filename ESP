@@ -1,24 +1,23 @@
 -- Admin ESP LocalScript
--- Highlight + username + distance text under player
--- Fully cleans up when player leaves
+-- Highlight + healthbar + username + distance
 
 local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
 
 local localPlayer = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
 local playersFolder = Workspace:WaitForChild("Players")
 
--- Rainbow function
+-- Rainbow color function
 local function getRainbowColor()
-    return Color3.fromHSV(tick()%5/5,1,1)
+    return Color3.fromHSV(tick() % 5 / 5, 1, 1)
 end
 
--- Table to store drawings for each model
+-- Store drawings per model
 local drawings = {}
 
--- Remove drawings for a model
+-- Remove drawings for model
 local function removeDrawings(model)
     if not drawings[model] then return end
     for _, obj in pairs(drawings[model]) do
@@ -27,49 +26,68 @@ local function removeDrawings(model)
     drawings[model] = nil
 end
 
--- Create drawings for a model
-local function createDrawings(model)
-    if drawings[model] then return end
-
-    local nameText = Drawing.new("Text")
-    nameText.Size = 16
-    nameText.Center = true
-    nameText.Outline = true
-    nameText.Color = Color3.fromRGB(255,255,255)
-    nameText.Visible = true
-
-    local distText = Drawing.new("Text")
-    distText.Size = 16
-    distText.Center = true
-    distText.Outline = true
-    distText.Color = Color3.fromRGB(255,255,0)
-    distText.Visible = true
-
-    drawings[model] = {
-        name = nameText,
-        distance = distText
-    }
-end
-
--- Apply ESP to a model
+-- Apply Highlight + Drawing text + healthbar
 local function applyESP(model)
     if not model or model == localPlayer.Character then return end
     local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso")
     local humanoid = model:FindFirstChildWhichIsA("Humanoid")
     if not root or not humanoid then return end
 
-    -- Create drawings if not exist
-    createDrawings(model)
+    -- Highlight
+    if not model:FindFirstChild("Admin_Highlight") then
+        local hl = Instance.new("Highlight")
+        hl.Name = "Admin_Highlight"
+        hl.FillColor = Color3.fromRGB(0,0,0)
+        hl.FillTransparency = 0.4
+        hl.OutlineColor = getRainbowColor()
+        hl.OutlineTransparency = 0
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Parent = model
+    end
 
-    -- Remove drawings when humanoid dies
+    -- Create drawings if not exist
+    if not drawings[model] then
+        local healthBar = Drawing.new("Text")
+        healthBar.Size = 16
+        healthBar.Center = true
+        healthBar.Outline = true
+        healthBar.Color = Color3.fromRGB(0,255,0)
+        healthBar.Visible = true
+
+        local nameText = Drawing.new("Text")
+        nameText.Size = 16
+        nameText.Center = true
+        nameText.Outline = true
+        nameText.Color = Color3.fromRGB(255,255,255)
+        nameText.Visible = true
+
+        local distText = Drawing.new("Text")
+        distText.Size = 16
+        distText.Center = true
+        distText.Outline = true
+        distText.Color = Color3.fromRGB(255,255,0)
+        distText.Visible = true
+
+        drawings[model] = {
+            health = healthBar,
+            name = nameText,
+            distance = distText
+        }
+    end
+
+    -- Cleanup on death
     humanoid.Died:Connect(function()
         removeDrawings(model)
+        local hl = model:FindFirstChild("Admin_Highlight")
+        if hl then hl:Destroy() end
     end)
 
-    -- Remove drawings if model is removed from workspace
+    -- Cleanup on removal
     model.AncestryChanged:Connect(function(_, parent)
         if not parent then
             removeDrawings(model)
+            local hl = model:FindFirstChild("Admin_Highlight")
+            if hl then hl:Destroy() end
         end
     end)
 end
@@ -85,42 +103,56 @@ playersFolder.ChildAdded:Connect(function(model)
     applyESP(model)
 end)
 
--- Remove drawings when a player leaves
+-- Remove drawings when model removed from folder
 playersFolder.ChildRemoved:Connect(function(model)
     removeDrawings(model)
 end)
 
--- Update drawings every frame
+-- Update every frame
 RunService.RenderStepped:Connect(function()
     for model, objs in pairs(drawings) do
         if model.Parent then
             local root = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Torso")
-            if root then
-                local pos, onScreen = camera:WorldToViewportPoint(root.Position + Vector3.new(0,3,0))
+            local humanoid = model:FindFirstChildWhichIsA("Humanoid")
+            if root and humanoid and humanoid.Health > 0 then
+                local screenPos, onScreen = camera:WorldToViewportPoint(root.Position)
                 if onScreen then
-                    -- Name below player
-                    objs.name.Position = Vector2.new(pos.X, pos.Y + 20)
+                    -- Health above player
+                    objs.health.Position = Vector2.new(screenPos.X, screenPos.Y - 20)
+                    objs.health.Text = string.format("HP: %.0f/%.0f", humanoid.Health, humanoid.MaxHealth)
+                    objs.health.Color = getRainbowColor()
+                    objs.health.Visible = true
+
+                    -- Username below player
+                    objs.name.Position = Vector2.new(screenPos.X, screenPos.Y + 20)
                     objs.name.Text = model.Name
-
-                    -- Distance under player
-                    local dist = (root.Position - camera.CFrame.Position).Magnitude
-                    objs.distance.Position = Vector2.new(pos.X, pos.Y + 35)
-                    objs.distance.Text = string.format("[%.0f] studs", dist)
-
-                    -- Rainbow outline effect for distance
                     objs.name.Color = Color3.fromRGB(255,255,255)
-                    objs.distance.Color = getRainbowColor()
-
                     objs.name.Visible = true
+
+                    -- Distance under username
+                    local dist = (root.Position - camera.CFrame.Position).Magnitude
+                    objs.distance.Position = Vector2.new(screenPos.X, screenPos.Y + 35)
+                    objs.distance.Text = string.format("[%.0f] studs", dist)
+                    objs.distance.Color = getRainbowColor()
                     objs.distance.Visible = true
+
+                    -- Rainbow highlight outline
+                    local hl = model:FindFirstChild("Admin_Highlight")
+                    if hl then hl.OutlineColor = getRainbowColor() end
                 else
+                    objs.health.Visible = false
                     objs.name.Visible = false
                     objs.distance.Visible = false
                 end
+            else
+                objs.health.Visible = false
+                objs.name.Visible = false
+                objs.distance.Visible = false
             end
         else
-            -- Remove drawings if root missing
             removeDrawings(model)
+            local hl = model:FindFirstChild("Admin_Highlight")
+            if hl then hl:Destroy() end
         end
     end
 end)
