@@ -3,8 +3,8 @@ local UserInputService = game:GetService("UserInputService")
 
 -- WHITELIST: put your usernames here
 local whitelistedUsers = {
-	["YourUsername1"] = true,
-	["YourUsername2"] = true,
+	["AuroraArrowB3ar20058"] = true,
+	["sanchetoa12"] = true,
 	["unitnova389"] = true,
 }
 
