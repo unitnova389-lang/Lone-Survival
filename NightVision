@@ -72,37 +72,16 @@ RunService.RenderStepped:Connect(function()
 end)
 
 ---------------------------------------------------------------------
--- 🟪 Create and lock Atmosphere (local only)
+-- 🟦 Remove Roblox’s built-in underwater fog (local only)
 ---------------------------------------------------------------------
--- Ensure there is an Atmosphere object
-local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
-if not atmosphere then
-    atmosphere = Instance.new("Atmosphere")
-    atmosphere.Name = "LocalAtmosphere"
-    atmosphere.Parent = Lighting
-end
+local Terrain = workspace.Terrain
 
--- Function to enforce atmosphere values
-local function enforceAtmosphere()
-    for _, obj in pairs(Lighting:GetChildren()) do
-        if obj:IsA("Atmosphere") then
-            obj.Density = 0
-            obj.Offset = 0
-            obj.Glare = 0
-            obj.Haze = 0
-        end
-    end
-end
+-- Make water visually clear
+Terrain.WaterTransparency = 1        -- fully transparent water
+Terrain.WaterReflectance = 0         -- no surface reflection if desired
+Terrain.WaterWaveSize = 0            -- no waves
+Terrain.WaterWaveSpeed = 0           -- stop ripples
 
--- Prevent new Atmosphere objects from changing anything
-Lighting.ChildAdded:Connect(function(child)
-    if child:IsA("Atmosphere") then
-        child.Density = 0
-        child.Offset = 0
-        child.Glare = 0
-        child.Haze = 0
-    end
-end)
-
--- Enforce every frame
-RunService.RenderStepped:Connect(enforceAtmosphere)
+-- The key lines for fog:
+Terrain.WaterFogColor = Color3.fromRGB(0, 0, 0)  -- doesn’t matter if density is 0
+Terrain.WaterFogEnd = 1                         -- huge distance so no blue haze
