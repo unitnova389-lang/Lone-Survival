@@ -1,4 +1,4 @@
--- Admin Aimbot with Fast Smooth Camera, Perfectly Centered FOV Circle + Outline + Alive Check
+-- Admin Aimbot with Fast Smooth Camera, Perfectly Centered FOV Circle + Outline + Alive + FOV Check
 -- LocalScript in StarterPlayerScripts
 
 local Players = game:GetService("Players")
@@ -79,7 +79,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 	end
 end)
 
--- Find closest head in workspace.Players that belongs to a real player and is alive
+-- Find closest head in workspace.Players that belongs to a real player, alive, and inside FOV
 local function getClosestHead(center)
 	local folder = workspace:FindFirstChild("Players")
 	if not folder then return nil end
@@ -124,21 +124,27 @@ RunService.RenderStepped:Connect(function(dt)
 	hue = (hue + dt * 0.5) % 1
 	outerStroke.Color = hsvToRgb(hue,1,1)
 
-	-- Smooth aimbot logic
 	if aimEnabled then
-		if not aimTarget or not aimTarget.Parent or aimTarget.Parent.Name == localPlayer.Name then
-			aimTarget = getClosestHead(screenCenter)
-		end
-
-		-- Only aim if target is alive
+		-- If current target is dead, missing, or outside FOV, pick a new target
+		local validTarget = false
 		if aimTarget and aimTarget.Parent and Players:FindFirstChild(aimTarget.Parent.Name) then
 			local humanoid = aimTarget.Parent:FindFirstChildOfClass("Humanoid")
 			if humanoid and humanoid.Health > 0 then
-				local goalCFrame = CFrame.new(camera.CFrame.Position, aimTarget.Position)
-				camera.CFrame = camera.CFrame:Lerp(goalCFrame, smoothness)
-			else
-				aimTarget = nil -- stop aiming if dead
+				local pos, visible = camera:WorldToViewportPoint(aimTarget.Position)
+				if visible and (Vector2.new(pos.X,pos.Y) - screenCenter).Magnitude <= fovRadius then
+					validTarget = true
+				end
 			end
+		end
+
+		if not validTarget then
+			aimTarget = getClosestHead(screenCenter)
+		end
+
+		-- Aim if valid
+		if aimTarget then
+			local goalCFrame = CFrame.new(camera.CFrame.Position, aimTarget.Position)
+			camera.CFrame = camera.CFrame:Lerp(goalCFrame, smoothness)
 		end
 	end
 end)
