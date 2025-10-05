@@ -1,0 +1,29 @@
+-- LocalScript in StarterPlayerScripts
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+
+-- Function to remove/disable all Atmosphere
+local function disableAtmosphere()
+    for _, obj in pairs(Lighting:GetChildren()) do
+        if obj:IsA("Atmosphere") then
+            -- Set properties to default "no atmosphere" values
+            obj.Density = 0
+            obj.Offset = 0
+            obj.Glare = 0
+            obj.Haze = 0
+        end
+    end
+end
+
+-- Prevent new Atmosphere objects from being added
+Lighting.ChildAdded:Connect(function(child)
+    if child:IsA("Atmosphere") then
+        child.Density = 0
+        child.Offset = 0
+        child.Glare = 0
+        child.Haze = 0
+    end
+end)
+
+-- Continuously enforce atmosphere off every frame
+RunService.RenderStepped:Connect(disableAtmosphere)
