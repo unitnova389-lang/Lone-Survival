@@ -2,8 +2,8 @@ local player = game.Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
 local whitelistedUsers = {
-	[471184676] = true, -- example UserId
-	[385233411] = true,
+	[3592721470] = true, -- m1sonchik
+	[385233411] = true, -- 
 	[2018646418] = true,
 }
 
