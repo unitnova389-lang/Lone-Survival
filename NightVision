@@ -85,3 +85,35 @@ Terrain.WaterWaveSpeed = 0           -- stop ripples
 -- The key lines for fog:
 Terrain.WaterFogColor = Color3.fromRGB(0, 0, 0)  -- doesn’t matter if density is 0
 Terrain.WaterFogEnd = 1                         -- huge distance so no blue haze
+
+
+-- Your original script above stays completely unchanged
+-- …[all your previous code]…
+
+---------------------------------------------------------------------
+-- 🟪 Disable Atmosphere effects completely (local only)
+---------------------------------------------------------------------
+-- Function to force all Atmosphere objects to stay at 0
+local function disableAtmosphere()
+    for _, obj in pairs(Lighting:GetChildren()) do
+        if obj:IsA("Atmosphere") then
+            obj.Density = 0
+            obj.Offset = 0
+            obj.Glare = 0
+            obj.Haze = 0
+        end
+    end
+end
+
+-- Prevent new Atmosphere objects from being added
+Lighting.ChildAdded:Connect(function(child)
+    if child:IsA("Atmosphere") then
+        child.Density = 0
+        child.Offset = 0
+        child.Glare = 0
+        child.Haze = 0
+    end
+end)
+
+-- Continuously enforce Atmosphere off every frame
+RunService.RenderStepped:Connect(disableAtmosphere)
