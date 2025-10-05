@@ -4,7 +4,7 @@ local UserInputService = game:GetService("UserInputService")
 local whitelistedUsers = {
 	[3592721470] = true, -- m1sonchik
 	[9253554436] = true, -- Me
-	[9034504916] = true, -- DANYA
+	[9254777507] = true, -- DANYA
 }
 
 if not whitelistedUsers[player.UserId] then
