@@ -3,7 +3,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local whitelistedUsers = {
 	[3592721470] = true, -- m1sonchik
-	[385233411] = true, -- 
+	[9253554436] = true, -- Me
 	[2018646418] = true,
 }
 
