@@ -1,29 +1,31 @@
--- LocalScript in StarterPlayerScripts
+-- Night Vision + Sky Removed
 local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 
--- Function to remove/disable all Atmosphere
-local function disableAtmosphere()
-    for _, obj in pairs(Lighting:GetChildren()) do
-        if obj:IsA("Atmosphere") then
-            -- Set properties to default "no atmosphere" values
-            obj.Density = 0
-            obj.Offset = 0
-            obj.Glare = 0
-            obj.Haze = 0
-        end
+-- Remove the Sky object only
+for _, obj in pairs(Lighting:GetChildren()) do
+    if obj:IsA("Sky") then
+        obj:Destroy()
     end
 end
 
--- Prevent new Atmosphere objects from being added
-Lighting.ChildAdded:Connect(function(child)
-    if child:IsA("Atmosphere") then
-        child.Density = 0
-        child.Offset = 0
-        child.Glare = 0
-        child.Haze = 0
-    end
-end)
+-- Make terrain water fully visible
+if Workspace:FindFirstChild("Terrain") then
+    local terrain = Workspace.Terrain
+    terrain.WaterTransparency = 0
+    terrain.WaterReflectance = 0
+    terrain.WaterWaveSize = 0
+    terrain.WaterWaveSpeed = 0
+end
 
--- Continuously enforce atmosphere off every frame
-RunService.RenderStepped:Connect(disableAtmosphere)
+-- Night vision loop
+RunService.RenderStepped:Connect(function()
+    Lighting.Brightness = 5                    -- bright world
+    Lighting.Ambient = Color3.fromRGB(255,255,255)        -- full ambient
+    Lighting.OutdoorAmbient = Color3.fromRGB(255,255,255) -- full outdoor ambient
+    Lighting.ClockTime = 12                     -- midday lighting
+    Lighting.FogStart = 0
+    Lighting.FogEnd = 100000
+    Lighting.GlobalShadows = false             -- remove shadows
+end)
