@@ -61,12 +61,12 @@ if not whitelistedUsers[player.UserId] then
 		lbl.Parent = loreFrame
 	end
 
-	addLore("You fucking bitch, you're fucking nuts, bitch. We got your fucking IP and wait for the fucking cops.")
+	addLore("hi.")
 	addLore("If you think this is a mistake, open a ticket and we will remove your IP from our data and give you access.")
 	addLore("Вам не разрешили доступ.")
-	addLore("Сука ебанная блять, ты уже блять ахуел сучка. мы получили твой ебанный айпи и жди мусоров ебанных")
+	addLore("qq")
 	addLore("Если вы думаете что это ошибка, откройте тикет и дадим вам доступ.")
-	addLore("С любовью, @People. | With Love, @People")
+	addLore("С любовью, создатель лоуна. | With Love, Founder of Lone Survival")
 
 	return -- stop here if not whitelisted
 end
@@ -92,7 +92,7 @@ mainFrame.Parent = screenGui
 -- Top Bar
 local topBar = Instance.new("TextLabel")
 topBar.Size = UDim2.new(1, 0, 0, 40)
-topBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- dark grey
+topBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 topBar.BackgroundTransparency = 0.4 -- 40% transparency
 topBar.TextColor3 = Color3.fromRGB(255, 255, 255)
 topBar.TextScaled = true
@@ -102,7 +102,7 @@ topBar.Parent = mainFrame
 -- Rainbow outline for top bar
 local topBarStroke = Instance.new("UIStroke")
 topBarStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-topBarStroke.Color = Color3.fromHSV(0,0,0) -- will update dynamically
+topBarStroke.Color = Color3.fromHSV(0,0,0)
 topBarStroke.Thickness = 1.2
 topBarStroke.Parent = topBar
 
@@ -110,10 +110,10 @@ topBarStroke.Parent = topBar
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, 0, 1, -40)
 scrollFrame.Position = UDim2.new(0, 0, 0, 40)
-scrollFrame.BackgroundColor3 = Color3.fromRGB(0,0,0) -- black background
+scrollFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 scrollFrame.BackgroundTransparency = 0.6 -- 60% transparency
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-scrollFrame.ScrollBarThickness = 1.2
+scrollFrame.ScrollBarThickness = 6
 scrollFrame.Parent = mainFrame
 
 local scrollStroke = Instance.new("UIStroke")
@@ -201,6 +201,7 @@ createRemoteButton("ESP", "https://raw.githubusercontent.com/unitnova389-lang/Lo
 createRemoteButton("NightVision", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/NightVision")
 createRemoteButton("Zoom", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/Zoom")
 createRemoteButton("AimBot: X", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/AIMBOT1")
+createRemoteButton("Multi HitBox", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/XBOXHITBOX")
 
 -- Toggle menu with F5
 UserInputService.InputBegan:Connect(function(input, processed)
