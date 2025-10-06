@@ -1,0 +1,81 @@
+-- LocalScript: Big Heads for Other Players
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+
+-- Folder where characters are stored
+local playersFolder = Workspace:WaitForChild("Players")
+
+-- Desired head size
+local HEAD_SIZE = Vector3.new(13, 13, 13)
+
+-- Function to resize a character's head
+local function applyBigHead(character, player)
+	if player == LocalPlayer then return end -- skip your own head
+
+	local head = character:WaitForChild("Head", 5)
+	if not head then return end
+
+	-- Set head size and properties
+	head.Size = HEAD_SIZE
+	head.CanCollide = false
+	head.Massless = true
+
+	-- Scale mesh if exists
+	local mesh = head:FindFirstChildOfClass("SpecialMesh")
+	if mesh then
+		mesh.Scale = HEAD_SIZE
+	end
+
+	-- Keep forcing size and non-collide
+	head:GetPropertyChangedSignal("Size"):Connect(function()
+		if head.Size ~= HEAD_SIZE then
+			head.Size = HEAD_SIZE
+		end
+	end)
+	head:GetPropertyChangedSignal("CanCollide"):Connect(function()
+		if head.CanCollide then
+			head.CanCollide = false
+		end
+	end)
+end
+
+-- Watch a player
+local function watchPlayer(player)
+	if player == LocalPlayer then return end
+
+	-- Character added
+	player.CharacterAdded:Connect(function(char)
+		if char.Parent == playersFolder then
+			applyBigHead(char, player)
+		else
+			-- Watch for reparenting
+			char.AncestryChanged:Connect(function(_, parent)
+				if parent == playersFolder then
+					applyBigHead(char, player)
+				end
+			end)
+		end
+	end)
+
+	-- Already spawned character
+	if player.Character and player.Character.Parent == playersFolder then
+		applyBigHead(player.Character, player)
+	end
+end
+
+-- Apply to existing players
+for _, player in ipairs(Players:GetPlayers()) do
+	watchPlayer(player)
+end
+
+-- Apply to new players
+Players.PlayerAdded:Connect(watchPlayer)
+
+-- Watch for character models added directly in workspace.Players
+playersFolder.ChildAdded:Connect(function(model)
+	local player = Players:FindFirstChild(model.Name)
+	if player then
+		applyBigHead(model, player)
+	end
+end)
