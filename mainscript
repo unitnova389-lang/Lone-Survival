@@ -8,7 +8,6 @@ local whitelistedUsers = {
 }
 
 if not whitelistedUsers[player.UserId] then
-
 	-- Block movement + input
 	UserInputService.InputBegan:Connect(function(input)
 		return Enum.ContextActionResult.Sink
@@ -50,7 +49,6 @@ if not whitelistedUsers[player.UserId] then
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Padding = UDim.new(0, 10)
 
-	-- Function to add lore lines
 	local function addLore(text)
 		local lbl = Instance.new("TextLabel")
 		lbl.Size = UDim2.new(1, 0, 0, 40)
@@ -63,31 +61,20 @@ if not whitelistedUsers[player.UserId] then
 		lbl.Parent = loreFrame
 	end
 
-	-- Custom lore lines
 	addLore("You fucking bitch, you're fucking nuts, bitch. We got your fucking IP and wait for the fucking cops.")
 	addLore("If you think this is a mistake, open a ticket and we will remove your IP from our data and give you access.")
 	addLore("Вам не разрешили доступ.")
 	addLore("Сука ебанная блять, ты уже блять ахуел сучка. мы получили твой ебанный айпи и жди мусоров ебанных")
 	addLore("Если вы думаете что это ошибка, откройте тикет и дадим вам доступ.")
-	addLore("С любовью, создатель лоуна. | With Love, Founder of Lone Survival")
+	addLore("С любовью, @People. | With Love, @People")
 
 	return -- stop here if not whitelisted
 end
 
-----------------------------------------------------------------
--- If player IS whitelisted, continue with normal menu
-----------------------------------------------------------------
-
-print("✅ Whitelisted, loading Black Loner menu...")
--- Your menu script goes here (ESP/NightVision/Zoom buttons etc.)
-
-local player = game.Players.LocalPlayer
-local UserInputService = game:GetService("UserInputService")
-
+-- ================== WHITELIST PASSED: MENU ==================
 local menuVisible = true
 local dragging, dragStart, startPos
 
--- ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "BlackLonerMenu"
 screenGui.ResetOnSpawn = false
@@ -105,20 +92,35 @@ mainFrame.Parent = screenGui
 -- Top Bar
 local topBar = Instance.new("TextLabel")
 topBar.Size = UDim2.new(1, 0, 0, 40)
-topBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+topBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- dark grey
+topBar.BackgroundTransparency = 0.4 -- 40% transparency
 topBar.TextColor3 = Color3.fromRGB(255, 255, 255)
 topBar.TextScaled = true
 topBar.Text = "Black Loner"
 topBar.Parent = mainFrame
 
--- Scroll Frame
+-- Rainbow outline for top bar
+local topBarStroke = Instance.new("UIStroke")
+topBarStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+topBarStroke.Color = Color3.fromHSV(0,0,0) -- will update dynamically
+topBarStroke.Thickness = 1.2
+topBarStroke.Parent = topBar
+
+-- Scroll Frame (black background)
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, 0, 1, -40)
 scrollFrame.Position = UDim2.new(0, 0, 0, 40)
-scrollFrame.BackgroundTransparency = 1
+scrollFrame.BackgroundColor3 = Color3.fromRGB(0,0,0) -- black background
+scrollFrame.BackgroundTransparency = 0.6 -- 60% transparency
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-scrollFrame.ScrollBarThickness = 6
+scrollFrame.ScrollBarThickness = 1.2
 scrollFrame.Parent = mainFrame
+
+local scrollStroke = Instance.new("UIStroke")
+scrollStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+scrollStroke.Color = Color3.fromHSV(0,0,0)
+scrollStroke.Thickness = 3
+scrollStroke.Parent = scrollFrame
 
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 5)
@@ -130,11 +132,23 @@ layout.Changed:Connect(function()
 	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
 end)
 
--- Helper function to create a button
+-- Rainbow effect for outlines
+spawn(function()
+	local hue = 0
+	while true do
+		hue = (hue + 0.01) % 1
+		topBarStroke.Color = Color3.fromHSV(hue,1,1)
+		scrollStroke.Color = Color3.fromHSV(hue,1,1)
+		wait(0.03)
+	end
+end)
+
+-- Helper function to create a button that runs remote script once
 local function createRemoteButton(name, url)
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(1, -10, 0, 40)
 	button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	button.BackgroundTransparency = 0.3 -- 30% transparency
 	button.TextColor3 = Color3.fromRGB(0, 255, 0)
 	button.TextScaled = true
 	button.Text = name
@@ -161,13 +175,15 @@ local function createRemoteButton(name, url)
 		button.Active = false
 		button.Selectable = false
 
-		task.spawn(function()
-			local ok, err = pcall(function()
-				local fn = loadstring(game:HttpGet(url))
-				if type(fn) == "function" then fn() end
+		if url then
+			task.spawn(function()
+				local ok, err = pcall(function()
+					local fn = loadstring(game:HttpGet(url))
+					if type(fn) == "function" then fn() end
+				end)
+				if not ok then warn("Failed to run script:", url, err) end
 			end)
-			if not ok then warn("Failed to run script:", url, err) end
-		end)
+		end
 	end)
 end
 
@@ -184,6 +200,7 @@ end)
 createRemoteButton("ESP", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/ESP")
 createRemoteButton("NightVision", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/NightVision")
 createRemoteButton("Zoom", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/Zoom")
+createRemoteButton("AimBot: X", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/AIMBOT1")
 
 -- Toggle menu with F5
 UserInputService.InputBegan:Connect(function(input, processed)
