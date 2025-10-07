@@ -1,4 +1,4 @@
--- Night Vision + Sky Removed
+-- Night Vision + Sky Removed (fixed brightness)
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
@@ -21,11 +21,11 @@ end
 
 -- Night vision loop
 RunService.RenderStepped:Connect(function()
-    Lighting.Brightness = 5                    -- bright world
-    Lighting.Ambient = Color3.fromRGB(255,255,255)        -- full ambient
-    Lighting.OutdoorAmbient = Color3.fromRGB(255,255,255) -- full outdoor ambient
-    Lighting.ClockTime = 12                     -- midday lighting
+    Lighting.Brightness = 2 -- normal bright, not blinding
+    Lighting.Ambient = Color3.fromRGB(200, 200, 200)        -- soft gray light
+    Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200) -- balanced ambient
+    Lighting.ClockTime = 14 -- afternoon (clear daylight look)
     Lighting.FogStart = 0
     Lighting.FogEnd = 100000
-    Lighting.GlobalShadows = false             -- remove shadows
+    Lighting.GlobalShadows = true -- keep shadows for depth
 end)
