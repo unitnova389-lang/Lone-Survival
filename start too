@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
 
--- Highlight setup function
+-- Highlight setup
 local function applyHighlight(viewmodel)
 	if not viewmodel:FindFirstChild("CustomHighlight") then
 		local hl = Instance.new("Highlight")
@@ -18,7 +18,7 @@ local function applyHighlight(viewmodel)
 	end
 end
 
--- Arm material & color setup function
+-- Arm setup
 local function applyArmChanges(viewmodel)
 	local parts = {
 		"LeftHand", "LeftLowerArm", "LeftUpperArm",
@@ -33,25 +33,46 @@ local function applyArmChanges(viewmodel)
 	end
 end
 
--- Apply everything to the current or future Viewmodel
+-- Extra models setup
+local function applyExtraModels(viewmodel)
+	for _, child in ipairs(viewmodel:GetChildren()) do
+		-- skip arms
+		if not table.find({
+			"LeftHand","LeftLowerArm","LeftUpperArm",
+			"RightHand","RightLowerArm","RightUpperArm"
+		}, child.Name) then
+			-- process all descendants
+			for _, descendant in ipairs(child:GetDescendants()) do
+				if descendant:IsA("BasePart") then
+					descendant.Material = Enum.Material.Neon
+					descendant.Transparency = 0.5
+					descendant.Color = Color3.fromRGB(0, 0, 0)
+				elseif descendant:IsA("SurfaceAppearance") then
+					descendant:Destroy()
+				end
+			end
+		end
+	end
+end
+
+-- Apply everything
 local function setupViewmodel(vm)
 	if vm then
 		applyHighlight(vm)
 		applyArmChanges(vm)
+		applyExtraModels(vm)
 	end
 end
 
--- Watch for Viewmodel inside Camera
+-- Watch for Viewmodel
 local function watchCamera()
 	local cam = Workspace.CurrentCamera
 	if not cam then return end
 
-	-- If Viewmodel already exists
 	if cam:FindFirstChild("Viewmodel") then
 		setupViewmodel(cam.Viewmodel)
 	end
 
-	-- When new children appear in camera
 	cam.ChildAdded:Connect(function(child)
 		if child.Name == "Viewmodel" then
 			setupViewmodel(child)
@@ -59,5 +80,4 @@ local function watchCamera()
 	end)
 end
 
--- Start watching
 watchCamera()
