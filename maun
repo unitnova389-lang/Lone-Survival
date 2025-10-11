@@ -179,6 +179,7 @@ createRemoteButton("AimBot: X", "https://raw.githubusercontent.com/unitnova389-l
 createRemoteButton("Multi HitBox", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/XBOXHITBOX")
 createRemoteButton("AI: ESP", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/AI-ESP")
 createRemoteButton("AI: HITBOX", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/AI-HBHITBOTX")
+createRemoteButton("Speedhack", "https://raw.githubusercontent.com/unitnova389-lang/Lone-Survival/refs/heads/main/Speedhk")
 
 -- 🎛 Menu toggle (F5)
 local menuVisible = true
