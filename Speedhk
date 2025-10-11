@@ -28,7 +28,7 @@ local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "TPWalkUI"
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0,300,0,180)
+mainFrame.Size = UDim2.new(0,300,0,200)
 mainFrame.Position = UDim2.new(0,50,0,50)
 mainFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 mainFrame.BackgroundTransparency = 0.2
@@ -64,14 +64,18 @@ infoLabel.Position = UDim2.new(0,0,0,30)
 infoLabel.BackgroundTransparency = 1
 infoLabel.TextScaled = true
 infoLabel.TextColor3 = Color3.fromRGB(255,255,255)
-infoLabel.Text = "Click button to set keybind:\nSlow, Fast, Reset"
+infoLabel.Text = "Click button to set keybind:"
 infoLabel.Parent = mainFrame
 
--- Function to create buttons
+-- Function to create buttons immediately below the info label
 local function createKeybindButton(actionName, index)
+	local spacing = 5
+	local buttonHeight = 30
+	local startY = infoLabel.Position.Y.Offset + infoLabel.Size.Y.Offset + spacing
+
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0,260,0,40)
-	btn.Position = UDim2.new(0,20,0,85 + (index-1)*45) -- proper spacing
+	btn.Size = UDim2.new(0,260,0,buttonHeight)
+	btn.Position = UDim2.new(0,20,0, startY + (index-1)*(buttonHeight + spacing))
 	btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
 	btn.BackgroundTransparency = 0.3
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -104,6 +108,11 @@ createKeybindButton("Reset", 3)
 -- TPWalk keybind logic
 UserInputService.InputBegan:Connect(function(input, processed)
 	if processed then return end
+	-- Toggle GUI with F5
+	if input.KeyCode == Enum.KeyCode.F5 then
+		mainFrame.Visible = not mainFrame.Visible
+	end
+
 	if keybinds.Slow and input.KeyCode == keybinds.Slow then
 		tpSpeed = speedLow
 	elseif keybinds.Fast and input.KeyCode == keybinds.Fast then
