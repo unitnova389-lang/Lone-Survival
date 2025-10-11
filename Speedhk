@@ -1,0 +1,126 @@
+-- Infinity Yield style TPWalk with properly aligned buttons
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- Character references
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+player.CharacterAdded:Connect(function(char)
+	character = char
+	humanoid = char:WaitForChild("Humanoid")
+	hrp = char:WaitForChild("HumanoidRootPart")
+end)
+
+-- TPWalk variables
+local tpSpeed = 0
+local speedLow = 16
+local speedHigh = 32
+
+-- Keybinds (unset)
+local keybinds = {Slow = nil, Fast = nil, Reset = nil}
+
+-- GUI
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "TPWalkUI"
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0,300,0,180)
+mainFrame.Position = UDim2.new(0,50,0,50)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+mainFrame.BackgroundTransparency = 0.2
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Outline (RGB animated)
+local outline = Instance.new("UIStroke")
+outline.Thickness = 2
+outline.Parent = mainFrame
+local hue = 0
+RunService.RenderStepped:Connect(function()
+	hue = (hue + 1) % 360
+	outline.Color = Color3.fromHSV(hue/360,1,1)
+end)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,30)
+title.Position = UDim2.new(0,0,0,0)
+title.BackgroundTransparency = 1
+title.Text = "TPWalk"
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Parent = mainFrame
+
+-- Info label
+local infoLabel = Instance.new("TextLabel")
+infoLabel.Size = UDim2.new(1,0,0,50)
+infoLabel.Position = UDim2.new(0,0,0,30)
+infoLabel.BackgroundTransparency = 1
+infoLabel.TextScaled = true
+infoLabel.TextColor3 = Color3.fromRGB(255,255,255)
+infoLabel.Text = "Click button to set keybind:\nSlow, Fast, Reset"
+infoLabel.Parent = mainFrame
+
+-- Function to create buttons
+local function createKeybindButton(actionName, index)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0,260,0,40)
+	btn.Position = UDim2.new(0,20,0,85 + (index-1)*45) -- proper spacing
+	btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	btn.BackgroundTransparency = 0.3
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.TextScaled = true
+	btn.Text = actionName .. ": [Not set]"
+	btn.Parent = mainFrame
+
+	local waitingForInput = false
+
+	btn.MouseButton1Click:Connect(function()
+		btn.Text = actionName .. ": [Press any key]"
+		waitingForInput = true
+	end)
+
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if processed then return end
+		if waitingForInput and input.UserInputType == Enum.UserInputType.Keyboard then
+			keybinds[actionName] = input.KeyCode
+			btn.Text = actionName .. ": " .. keybinds[actionName].Name
+			waitingForInput = false
+		end
+	end)
+end
+
+-- Create buttons
+createKeybindButton("Slow", 1)
+createKeybindButton("Fast", 2)
+createKeybindButton("Reset", 3)
+
+-- TPWalk keybind logic
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if keybinds.Slow and input.KeyCode == keybinds.Slow then
+		tpSpeed = speedLow
+	elseif keybinds.Fast and input.KeyCode == keybinds.Fast then
+		tpSpeed = speedHigh
+	elseif keybinds.Reset and input.KeyCode == keybinds.Reset then
+		tpSpeed = 0
+	end
+end)
+
+-- TPWalk loop
+RunService.Heartbeat:Connect(function(dt)
+	if tpSpeed <= 0 then return end
+	if not hrp or not hrp.Parent then return end
+
+	local moveDir = humanoid.MoveDirection
+	if moveDir.Magnitude == 0 then return end
+
+	local moveAmount = moveDir.Unit * tpSpeed * dt
+	hrp.CFrame = hrp.CFrame + Vector3.new(moveAmount.X,0,moveAmount.Z)
+end)
