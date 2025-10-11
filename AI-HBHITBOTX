@@ -1,0 +1,42 @@
+--// LocalScript
+-- Put this in StarterPlayerScripts or StarterCharacterScripts
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+
+-- Settings
+local FOLDER_NAME = "AI"
+local HEAD_SIZE = Vector3.new(13, 13, 13) -- how big the head becomes
+local CHECK_INTERVAL = 1 -- how often it rechecks for new AIs
+
+-- Function to make the head big (and avoid repeating)
+local function makeHeadBig(model)
+	if not model:IsA("Model") then return end
+	local head = model:FindFirstChild("Head")
+	if head and head:IsA("BasePart") then
+		head.Size = HEAD_SIZE
+		head.Massless = true
+		head.CanCollide = false
+
+		-- Adjust attachments
+		for _, attachment in pairs(head:GetDescendants()) do
+			if attachment:IsA("Attachment") then
+				attachment.Position = attachment.Position * (HEAD_SIZE.X / 2)
+			end
+		end
+	end
+end
+
+-- Loop to continuously resize heads
+task.spawn(function()
+	while true do
+		local folder = Workspace:FindFirstChild(FOLDER_NAME)
+		if folder then
+			for _, obj in pairs(folder:GetChildren()) do
+				makeHeadBig(obj)
+			end
+		end
+		task.wait(CHECK_INTERVAL)
+	end
+end)
