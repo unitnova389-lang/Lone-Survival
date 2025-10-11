@@ -1,0 +1,118 @@
+-- LocalScript: NPC Highlighter
+-- Highlights all NPCs inside workspace.AI with red outline, black fill, and 0.6 transparency
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local aiFolder = workspace:WaitForChild("AI") -- Folder containing NPCs
+local guiParent = player:WaitForChild("PlayerGui")
+
+-- Folder for highlights
+local highlightFolder = Instance.new("Folder")
+highlightFolder.Name = "NPC Highlights"
+highlightFolder.Parent = guiParent
+
+local tracked = {}
+
+local function findAttachPart(npc)
+	local head = npc:FindFirstChild("Head")
+	if head and head:IsA("BasePart") then return head end
+	local hrp = npc:FindFirstChild("HumanoidRootPart")
+	if hrp and hrp:IsA("BasePart") then return hrp end
+	if npc.PrimaryPart and npc.PrimaryPart:IsA("BasePart") then return npc.PrimaryPart end
+	for _, c in ipairs(npc:GetChildren()) do
+		if c:IsA("BasePart") then return c end
+	end
+	return nil
+end
+
+local function cleanup(npc)
+	local data = tracked[npc]
+	if not data then return end
+	for _, c in ipairs(data.conns or {}) do
+		pcall(function() c:Disconnect() end)
+	end
+	if data.highlight then data.highlight:Destroy() end
+	if data.billboard then data.billboard:Destroy() end
+	tracked[npc] = nil
+end
+
+local function highlightNPC(npc)
+	if not npc or tracked[npc] then return end
+	local humanoid = npc:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	local attachPart = findAttachPart(npc)
+	if not attachPart then
+		warn("NPC '" .. npc.Name .. "' has no BasePart to attach to.")
+		return
+	end
+
+	-- 🟥 Highlight
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "NPC_Highlight"
+	highlight.Adornee = npc
+	highlight.FillColor = Color3.fromRGB(0, 0, 0) -- black fill
+	highlight.OutlineColor = Color3.fromRGB(255, 0, 0) -- red outline
+	highlight.FillTransparency = 0.6 -- 0 = solid, 1 = invisible
+	highlight.Parent = highlightFolder
+
+	-- 💬 Billboard GUI
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "NPC_Info"
+	billboard.AlwaysOnTop = true
+	billboard.Size = UDim2.new(0, 160, 0, 40)
+	billboard.StudsOffset = Vector3.new(0, 3.5, 0)
+	billboard.Adornee = attachPart
+	billboard.Parent = highlightFolder
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.TextScaled = true
+	label.Font = Enum.Font.GothamBold
+	label.TextStrokeTransparency = 0
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextWrapped = true
+	label.Parent = billboard
+
+	local function updateText()
+		local maxH = math.max(1, math.floor(humanoid.MaxHealth or 100))
+		local curH = math.max(0, math.floor(humanoid.Health or 0))
+		label.Text = string.format("%s\n%d/%d", npc.Name, curH, maxH)
+	end
+
+	updateText()
+
+	local conns = {}
+	conns[#conns + 1] = humanoid.HealthChanged:Connect(updateText)
+	conns[#conns + 1] = humanoid.Died:Connect(function()
+		cleanup(npc)
+	end)
+	conns[#conns + 1] = npc.AncestryChanged:Connect(function(_, parent)
+		if not parent then cleanup(npc) end
+	end)
+
+	tracked[npc] = {
+		highlight = highlight,
+		billboard = billboard,
+		conns = conns,
+	}
+end
+
+-- Apply to all existing NPCs
+for _, npc in ipairs(aiFolder:GetChildren()) do
+	highlightNPC(npc)
+end
+
+-- Detect new ones
+aiFolder.ChildAdded:Connect(function(npc)
+	task.wait(0.05)
+	highlightNPC(npc)
+end)
+
+-- Cleanup removed
+aiFolder.ChildRemoved:Connect(function(npc)
+	cleanup(npc)
+end)
+
+print("✅ NPC highlighter active (workspace.AI)")
