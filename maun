@@ -7,7 +7,7 @@ local whitelistedUsers = {
 	[1613334964] = true, -- 5_xu
 	[9222140312] = true, -- Vorobei
 	[9258801485] = true, -- Me
-	[9258801485] = true, -- Black
+	[9222190755] = true, -- Black
 }
 
 -- ❌ Not Whitelisted GUI
