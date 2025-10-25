@@ -7,7 +7,7 @@ local whitelistedUsers = {
 	[1613334964] = true, -- 5_xu
 	[4372973406] = true, -- Floppa
 	[9222151188] = true, -- Vorobei
-	[9674212004] = true, -- Me
+	[9221135103] = true, -- Me
 	[9222190755] = true, -- Black
 }
 
