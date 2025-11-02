@@ -11,7 +11,7 @@ local whitelistedUsers = {
 	[3064992649] = true, -- Me
 	[9220503956] = true, -- Black
 	[9433403776] = true, -- 555
-	[9222379698] = true, -- илья
+	[9841745228] = true, -- илья
 }
 
 -- ❌ Not Whitelisted GUI
